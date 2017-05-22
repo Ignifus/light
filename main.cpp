@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <regex>
 
 std::string readInput(const std::string& filepath){
 
@@ -19,10 +21,12 @@ std::string readInput(const std::string& filepath){
 }
 
 void interpret(const std::string& data){
-    std::string unprocessedStatements = data;
+    //Erase all tabs and newlines
+    std::string unprocessedStatements = std::regex_replace(data, std::regex("[\\n]|[\\t]"), "");
+
     unsigned long statementEnding = 0;
 
-    while(statementEnding!=-1){
+    while(statementEnding != -1ul){
         //Get the next semicolon ending
         statementEnding = unprocessedStatements.find_first_of(";");
 
