@@ -5,6 +5,8 @@
 #include <regex>
 
 std::map<std::string, int> integers;
+std::map<std::string, long> longs;
+std::map<std::string, std::string> strings;
 
 std::string trim(const std::string& str)
 {
@@ -38,7 +40,11 @@ void processStatement(const std::string& statement){
     std::string declaration = trim(statement.substr(statement.find_first_of("=") + 1, statement.length()));
 
     if(type == "numerito")
-        integers.emplace(identifier, std::stoi(declaration));
+        integers[identifier] = std::stoi(declaration);
+    else if(type == "numerote")
+        longs[identifier] = std::stol(declaration);
+    else if(type == "palabrita")
+        strings[identifier] = declaration.substr(declaration.find_first_of("\"") + 1, declaration.find_last_of("\"") - 1);
 }
 
 void interpret(const std::string& data){
@@ -72,11 +78,17 @@ int main(int argc, const char * argv[]) {
             for(auto in : integers){
                 std::cout << in.first << " " << in.second << std::endl;
             }
+            for(auto in : longs){
+                std::cout << in.first << " " << in.second << std::endl;
+            }
+            for(auto in : strings){
+                std::cout << in.first << " " << in.second << std::endl;
+            }
         } else {
             throw std::runtime_error("No input file was specified in parameters.");
         }
     }
-    catch(std::runtime_error e){
-        std::cerr << e.what() << std::endl;
+    catch(const std::exception& e){
+        std::cerr << "Error when executing: " << e.what() << std::endl;
     }
 }
