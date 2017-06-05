@@ -5,8 +5,11 @@
 #include <regex>
 
 std::map<std::string, int> integers;
+std::map<std::string, float> floats;
 std::map<std::string, bool> booleans;
 std::map<std::string, std::string> strings;
+
+char operators[] = {'+', '-', '/', '*'};
 
 std::string trim(const std::string& str)
 {
@@ -38,7 +41,18 @@ int solveInt(const std::string& declaration){
     std::string unprocessedOperations = std::regex_replace(declaration, std::regex("[\\s]"), "");
     int result = 0;
 
-    unsigned long operationSeparator = unprocessedOperations.find_first_of("+");
+    bool isFirstPass = true;
+
+    unsigned long operationSeparator = -1ul;
+    char operatorFound = '\0';
+
+    for (unsigned long j = 0; j < strlen(operators); ++j) {
+        operationSeparator = unprocessedOperations.find_first_of(operators[j]);
+        operatorFound = operators[j];
+
+        if(operationSeparator != -1ul)
+            break;
+    }
 
     // Is single declaration?
     if(operationSeparator == -1ul)
@@ -57,7 +71,7 @@ int solveInt(const std::string& declaration){
         // Get the next operation separator
         unsigned long nextOperationSeparator = -1ul;
         for (unsigned long i = operationSeparator + 1ul; i < unprocessedOperations.length(); ++i) {
-            if(unprocessedOperations[i] == '+'){
+            if(unprocessedOperations[i] == operatorFound){
                 nextOperationSeparator = i;
                 break;
             }
@@ -67,7 +81,7 @@ int solveInt(const std::string& declaration){
         std::string operation = unprocessedOperations.substr(0, nextOperationSeparator != -1ul ? nextOperationSeparator : unprocessedOperations.length());
 
         // Get left operation part
-        std::string left = trim(operation.substr(0, operation.find_first_of("+")));
+        std::string left = trim(operation.substr(0, operation.find_first_of(operatorFound)));
 
         int leftResult = 0;
 
@@ -81,8 +95,8 @@ int solveInt(const std::string& declaration){
         int rightResult = 0;
 
         // If not single part, get right part
-        if(operation.find_first_of("+") != -1ul){
-            std::string right = trim(operation.substr(operation.find_first_of("+") + 1, operation.length()));
+        if(operation.find_first_of(operatorFound) != -1ul){
+            std::string right = trim(operation.substr(operation.find_first_of(operatorFound) + 1, operation.length()));
 
             try{
                 rightResult = std::stoi(right);
@@ -92,11 +106,148 @@ int solveInt(const std::string& declaration){
             }
         }
 
-        result += leftResult + rightResult;
+        switch(operatorFound){
+            case '+':
+                result += leftResult + rightResult;
+                break;
+            case '-':
+                result -= leftResult - rightResult;
+                break;
+            case '/':
+                if(isFirstPass)
+                    result = 1;
+
+                if(rightResult == 0)
+                {
+                    std::cout << "Simio, no dividas por 0" << std::endl;
+                    break;
+                }
+                result /= leftResult / rightResult;
+                break;
+            case '*':
+                if(isFirstPass)
+                    result = 1;
+
+                result *= leftResult * rightResult;
+                break;
+            default:
+                break;
+        }
+
 
         operationSeparator = nextOperationSeparator;
         if(nextOperationSeparator != -1ul)
             unprocessedOperations = unprocessedOperations.substr(nextOperationSeparator + 1, unprocessedOperations.length());
+
+        isFirstPass = false;
+    }
+
+    return result;
+}
+
+float solveFloat(const std::string& declaration){
+    std::string unprocessedOperations = std::regex_replace(declaration, std::regex("[\\s]"), "");
+    float result = 0;
+
+    bool isFirstPass = true;
+
+    unsigned long operationSeparator = -1ul;
+    char operatorFound = '\0';
+
+    for (unsigned long j = 0; j < strlen(operators); ++j) {
+        operationSeparator = unprocessedOperations.find_first_of(operators[j]);
+        operatorFound = operators[j];
+
+        if(operationSeparator != -1ul)
+            break;
+    }
+
+    // Is single declaration?
+    if(operationSeparator == -1ul)
+    {
+        try{
+            result = std::stof(unprocessedOperations);
+        }
+        catch(std::exception e){
+            result = floats[unprocessedOperations];
+        }
+
+        return result;
+    }
+
+    while(operationSeparator != -1ul){
+        // Get the next operation separator
+        unsigned long nextOperationSeparator = -1ul;
+        for (unsigned long i = operationSeparator + 1ul; i < unprocessedOperations.length(); ++i) {
+            if(unprocessedOperations[i] == operatorFound){
+                nextOperationSeparator = i;
+                break;
+            }
+        }
+
+        // Get the isolated operation
+        std::string operation = unprocessedOperations.substr(0, nextOperationSeparator != -1ul ? nextOperationSeparator : unprocessedOperations.length());
+
+        // Get left operation part
+        std::string left = trim(operation.substr(0, operation.find_first_of(operatorFound)));
+
+        float leftResult = 0;
+
+        try{
+            leftResult = std::stof(left);
+        }
+        catch(std::exception e){
+            leftResult = floats[left];
+        }
+
+        float rightResult = 0;
+
+        // If not single part, get right part
+        if(operation.find_first_of(operatorFound) != -1ul){
+            std::string right = trim(operation.substr(operation.find_first_of(operatorFound) + 1, operation.length()));
+
+            try{
+                rightResult = std::stof(right);
+            }
+            catch(std::exception e){
+                rightResult = floats[right];
+            }
+        }
+
+        switch(operatorFound){
+            case '+':
+                result += leftResult + rightResult;
+                break;
+            case '-':
+                result -= leftResult - rightResult;
+                break;
+            case '/':
+                if(isFirstPass)
+                    result = 1;
+
+                if(rightResult == 0)
+                {
+                    std::cout << "Simio, no dividas por 0" << std::endl;
+                    break;
+                }
+                result /= leftResult / rightResult;
+                break;
+            case '*':
+                if(isFirstPass)
+                    result = 1;
+
+                result *= leftResult * rightResult;
+                break;
+            default:
+                break;
+        }
+
+
+        operationSeparator = nextOperationSeparator;
+        if(nextOperationSeparator != -1ul)
+            unprocessedOperations = unprocessedOperations.substr(nextOperationSeparator + 1, unprocessedOperations.length());
+
+        isFirstPass = false;
     }
 
     return result;
@@ -146,7 +297,43 @@ void processStructure(const std::string& structureHeader, const std::string& str
     }
 }
 
+std::string executeMethod(const std::string& statement){
+    if(statement.find_first_of("(") != -1ul){
+        //Probably a method call
+
+        unsigned long parameterStart = statement.find_first_of("(");
+
+        std::string identifier = statement.substr(0, parameterStart);
+
+        if(identifier == "print"){
+            std::string parameter = "";
+
+            for (auto i = parameterStart + 2; i < statement.find_first_of(")") - 1; ++i) {
+                parameter += statement[i];
+            }
+
+            std::cout << parameter << std::endl;
+
+            return "printed";
+        }
+
+        if(identifier == "read"){
+            std::string input = "";
+            std::getline(std::cin, input);
+
+            return input;
+        }
+    }
+
+    return "";
+}
+
 void processStatement(const std::string& statement){
+    std::string methodReturn = executeMethod(statement);
+
+    if(methodReturn == "printed")
+        return;
+
     std::string type = statement.substr(0,statement.find_first_of(" "));
     std::string identifier = trim(statement.substr(statement.find_first_of(" "), statement.find_first_of("=")-statement.find_first_of(" ")));
     std::string declaration = trim(statement.substr(statement.find_first_of("=") + 1, statement.length()));
@@ -156,13 +343,28 @@ void processStatement(const std::string& statement){
             var.second = solveInt(declaration);
     }
 
+    for(auto& var : floats){
+        if(var.first == type)
+            var.second = solveFloat(declaration);
+    }
+
     for(auto& var : booleans){
         if(var.first == type)
             var.second = solveBool(declaration);
     }
 
+    methodReturn = executeMethod(declaration);
+
     if(type == "numerito")
-        integers[identifier] = solveInt(declaration);
+        if(methodReturn != "")
+            integers[identifier] = std::stoi(methodReturn);
+        else
+            integers[identifier] = solveInt(declaration);
+    else if (type == "flotante")
+        if(methodReturn != "")
+            floats[identifier] = std::stof(methodReturn);
+        else
+            floats[identifier] = solveFloat(declaration);
     else if(type == "buleano")
         booleans[identifier] = solveBool(declaration);
     else if(type == "palabrita")
@@ -226,6 +428,9 @@ int main(int argc, const char * argv[]) {
 
             //Print the saved variables
             for(auto in : integers){
+                std::cout << in.first << " " << in.second << std::endl;
+            }
+            for(auto in : floats){
                 std::cout << in.first << " " << in.second << std::endl;
             }
             for(auto in : booleans){
